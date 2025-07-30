@@ -282,20 +282,63 @@ const initSettingsUI = () => {
         $('head').append(styles);
     };
     
-    function getUpdateNoticeHtml(version) {
-        return `
-            <h5>更新日志 (v${version})</h5>
-            <p>欢迎使用新版本！本次更新带来了重大改进：</p>
-            <ul>
-                <li><b>自动更新检查:</b> 插件现在会自动检查更新。当有新版本时，设置按钮旁会出现红色的“(可更新)”提示。</li>
-                <li><b>使用说明面板:</b> 设置面板标题已变为“使用说明”，点击可查看详细的功能介绍和使用技巧。</li>
-                <li><b>版本更新通知:</b> 每次更新后，您都会在这里看到类似这样的更新说明。</li>
-            </ul>
-            <p><b>点击面板右上角的关闭按钮即可隐藏此通知。</b></p>
-            <p class="update-footer">此日志仅在版本更新后首次打开时显示。</p>
-        `;
-    }
+    async function getUpdateNoticeHtml(version) {
+        const changelogUrl = `/extensions/${PLUGIN_ID}/CHANGELOG.md`;
+        try {
+            captureLogger.info(`Fetching local changelog from: ${changelogUrl}`);
+            const response = await fetch(changelogUrl, { cache: 'no-store' });
+            if (!response.ok) {
+                throw new Error(`Failed to load changelog: ${response.statusText}`);
+            }
+            
+            const changelogContent = await response.text();
+            
+            // 复用 updateChecker 中的日志提取逻辑来获取最新版本的内容
+            // 假设 CHANGELOG.md 的格式是 ## [1.2.3] ... ## [1.2.2]
+            const startMarker = `## [${version}]`;
+            let startIndex = changelogContent.indexOf(startMarker);
+            
+            if (startIndex === -1) {
+                return `<h5>更新日志 (v${version})</h5><p>无法自动加载更新详情，请检查 CHANGELOG.md 文件格式是否正确。</p>`;
+            }
 
+            // 找到下一个版本标题作为结束标记
+            let endIndex = changelogContent.indexOf('## [', startIndex + startMarker.length);
+            if (endIndex === -1) {
+                endIndex = changelogContent.length; // 如果是最后一个版本，则读取到文件末尾
+            }
+            
+            let relevantLog = changelogContent.substring(startIndex, endIndex).trim();
+
+            // 简单的 Markdown 转 HTML
+            relevantLog = relevantLog
+                .replace(/## \[(.*?)\]/, '<h5>更新日志 (v$1)</h5>') // 主标题
+                .replace(/### (.*?)\n/g, '<strong>$1</strong><br>')   // 子标题
+                .replace(/\n\*/g, '\n<li>')                         // 列表项
+                .replace(/\n/g, '<br>')                             // 换行
+                .replace(/<li>/g, '<ul><li>')                       // 包裹列表
+                .replace(/<\/strong><br>/g, '</strong>')
+                .replace(/(<\/li><br><ul><li>)+/g, '</li><li>')     // 合并列表
+                .replace(/<\/li><br>$/g, '</li>');
+
+            // 确保列表被正确闭合
+            if (relevantLog.includes('<li>')) {
+                 relevantLog += '</ul>';
+            }
+
+            return `
+                ${relevantLog}
+                <br>
+                <p><b>点击面板右上角的关闭按钮即可隐藏此通知。</b></p>
+                <p class="update-footer">此日志仅在版本更新后首次打开时显示。</p>
+            `;
+
+        } catch (error) {
+            captureLogger.error("加载本地CHANGELOG.md失败:", error);
+            return `<h5>更新日志 (v${version})</h5><p>加载更新日志时发生错误，请稍后重试。</p>`;
+        }
+    }
+	
     const createAndInjectUI = () => {
         if ($(`#${BUTTON_ID}`).length === 0 && $(`#extensionsMenu`).length > 0) {
             const settingsButton = $('<div/>', {
