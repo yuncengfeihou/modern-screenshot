@@ -282,62 +282,69 @@ const initSettingsUI = () => {
         $('head').append(styles);
     };
     
-    async function getUpdateNoticeHtml(version) {
-        const changelogUrl = `/scripts/extensions/third-party/${PLUGIN_ID}/CHANGELOG.md`;
-        try {
-            captureLogger.info(`Fetching local changelog from: ${changelogUrl}`);
-            const response = await fetch(changelogUrl, { cache: 'no-store' });
-            if (!response.ok) {
-                throw new Error(`Failed to load changelog: ${response.statusText}`);
-            }
-            
-            const changelogContent = await response.text();
-            
-            // 复用 updateChecker 中的日志提取逻辑来获取最新版本的内容
-            // 假设 CHANGELOG.md 的格式是 ## [1.2.3] ... ## [1.2.2]
-            const startMarker = `## [${version}]`;
-            let startIndex = changelogContent.indexOf(startMarker);
-            
-            if (startIndex === -1) {
-                return `<h5>更新日志 (v${version})</h5><p>无法自动加载更新详情，请检查 CHANGELOG.md 文件格式是否正确。</p>`;
-            }
+	async function getUpdateNoticeHtml(version) {
+		const repo = 'yuncengfeihou/modern-screenshot'; // 你的 GitHub 仓库
+		const changelogUrl = `https://cdn.jsdelivr.net/gh/${repo}@main/CHANGELOG.md`;
 
-            // 找到下一个版本标题作为结束标记
-            let endIndex = changelogContent.indexOf('## [', startIndex + startMarker.length);
-            if (endIndex === -1) {
-                endIndex = changelogContent.length; // 如果是最后一个版本，则读取到文件末尾
-            }
-            
-            let relevantLog = changelogContent.substring(startIndex, endIndex).trim();
+		try {
+			captureLogger.info(`Fetching remote changelog for version ${version} from: ${changelogUrl}`);
+			
+			// 1. 从网络获取最新的 CHANGELOG.md 内容
+			const response = await fetch(changelogUrl, { cache: 'no-store' });
+			if (!response.ok) {
+				throw new Error(`Failed to load changelog from jsDelivr: ${response.statusText}`);
+			}
+			const changelogContent = await response.text();
+			
+			// 2. 精确定位当前版本 (version) 的日志内容
+			const cleanVersion = String(version).replace('v', '').trim().replace(/\./g, '\\.');
+			const startRegex = new RegExp(`(##\\s*\\[?v?${cleanVersion}\\]?.*)`, 'i');
+			const startMatch = changelogContent.match(startRegex);
 
-            // 简单的 Markdown 转 HTML
-            relevantLog = relevantLog
-                .replace(/## \[(.*?)\]/, '<h5>更新日志 (v$1)</h5>') // 主标题
-                .replace(/### (.*?)\n/g, '<strong>$1</strong><br>')   // 子标题
-                .replace(/\n\*/g, '\n<li>')                         // 列表项
-                .replace(/\n/g, '<br>')                             // 换行
-                .replace(/<li>/g, '<ul><li>')                       // 包裹列表
-                .replace(/<\/strong><br>/g, '</strong>')
-                .replace(/(<\/li><br><ul><li>)+/g, '</li><li>')     // 合并列表
-                .replace(/<\/li><br>$/g, '</li>');
+			if (!startMatch) {
+				captureLogger.warn(`在远程CHANGELOG中找不到版本 ${version} 的内容。`);
+				return `<h5>更新日志 (v${version})</h5><p>无法自动加载更新详情，请检查远程 CHANGELOG.md 文件格式是否正确。</p>`;
+			}
+			
+			const startIndex = startMatch.index;
 
-            // 确保列表被正确闭合
-            if (relevantLog.includes('<li>')) {
-                 relevantLog += '</ul>';
-            }
+			// 3. 寻找下一个版本标题作为结束标记
+			const endRegex = /\n##\s*\[?v?[\d.]+/g;
+			endRegex.lastIndex = startIndex + startMatch[0].length; // 从当前标题之后开始搜索
+			const nextMatch = endRegex.exec(changelogContent);
+			
+			let endIndex = nextMatch ? nextMatch.index : changelogContent.length;
+			
+			let relevantLog = changelogContent.substring(startIndex, endIndex).trim();
 
-            return `
-                ${relevantLog}
-                <br>
-                <p><b>点击面板右上角的关闭按钮即可隐藏此通知。</b></p>
-                <p class="update-footer">此日志仅在版本更新后首次打开时显示。</p>
-            `;
+			// 4. 将简单的 Markdown 格式转换为 HTML
+			relevantLog = relevantLog
+				.replace(/## \[(.*?)\]/g, '<h5>更新日志 (v$1)</h5>')
+				.replace(/## (v?[\d.]+)/g, '<h5>更新日志 ($1)</h5>')
+				.replace(/### (.*?)(?:\n|<br>)/g, '<strong>$1</strong><br>')
+				.replace(/\n\s*\*/g, '\n<li>')
+				.replace(/\n/g, '<br>')
+				.replace(/<li>/g, '<ul><li>')
+				.replace(/(<\/li><br><ul><li>)+/g, '</li><li>')
+				.replace(/<\/li><br>$/g, '</li>');
 
-        } catch (error) {
-            captureLogger.error("加载本地CHANGELOG.md失败:", error);
-            return `<h5>更新日志 (v${version})</h5><p>加载更新日志时发生错误，请稍后重试。</p>`;
-        }
-    }
+			// 确保列表被正确闭合
+			if (relevantLog.includes('<li>') && !relevantLog.endsWith('</ul>')) {
+				 relevantLog += '</ul>';
+			}
+
+			return `
+				${relevantLog}
+				<br>
+				<p><b>点击面板右上角的关闭按钮即可隐藏此通知。</b></p>
+				<p class="update-footer">此日志仅在版本更新后首次打开时显示。</p>
+			`;
+
+		} catch (error) {
+			captureLogger.error("从网络加载CHANGELOG.md失败:", error);
+			return `<h5>更新日志 (v${version})</h5><p>加载更新日志时发生网络错误，请检查网络连接或稍后重试。</p>`;
+		}
+	}
 	
     const createAndInjectUI = () => {
         if ($(`#${BUTTON_ID}`).length === 0 && $(`#extensionsMenu`).length > 0) {
