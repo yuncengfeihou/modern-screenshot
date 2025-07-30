@@ -254,7 +254,7 @@ const initSettingsUI = () => {
             .mss-panel-header #mss-show-help-btn:hover { color: var(--SmartThemeQuoteColor, #8cdeff); }
             .mss-panel-close-btn { background: transparent; border: none; color: var(--SmartThemeBodyColor, #aaa); font-size: 24px; cursor: pointer; padding: 8px; line-height: 1; transition: all 0.2s ease; border-radius: 50%; }
             .mss-panel-close-btn:hover { color: var(--SmartThemeBodyColor, #fff); background: rgba(255, 255, 255, 0.1); }
-            .mss-panel-content { overflow-y: auto; padding: 24px; font-family: inherit; font-size: 14px; display: flex; flex-direction: column; flex-grow: 1; }
+            .mss-panel-content { overflow-y: auto; padding: 24px; font-family: inherit; font-size: 14px; display: flex; flex-direction: column; flex-grow: 1;min-height: 0; }
             .update-available-indicator { color: red; font-weight: bold; margin-left: 8px; cursor: pointer; }
             .update-available-indicator:hover { text-decoration: underline; }
             #${UPDATE_NOTICE_ID} { margin-bottom: 20px; padding: 15px; border: 1px solid var(--SmartThemeQuoteColor, #8cdeff); background: rgba(74, 158, 255, 0.1); border-radius: 8px; line-height: 1.6; }
