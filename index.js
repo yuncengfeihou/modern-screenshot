@@ -14,7 +14,7 @@ import {
 // --- 插件元数据 ---
 const PLUGIN_ID = 'modern-screenshot';
 const PLUGIN_NAME = 'modern-screenshot';
-const SCRIPT_VERSION = '2.0.5';
+const SCRIPT_VERSION = '2.0.6';
 
 // 日志系统
 const captureLogger = {
