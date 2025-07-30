@@ -264,8 +264,16 @@ const initSettingsUI = () => {
             #${UPDATE_NOTICE_ID} .update-footer { font-size: 0.85em; color: #888; margin-top: 15px; text-align: center; }
             #${HELP_PANEL_ID} { display: none; }
             .mss-help-content { padding: 0 24px 24px 24px; line-height: 1.7; }
-            .mss-help-content h5 { color: var(--SmartThemeQuoteColor, #8cdeff); margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid var(--SmartThemeBorderColor, #444); padding-bottom: 5px; }
-            .mss-help-content code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
+            .mss-help-content h4 { font-size: 1.3em; margin-bottom: 15px; text-align: center; color: var(--SmartThemeQuoteColor, #8cdeff); border-bottom: 1px solid var(--SmartThemeBorderColor, #444); padding-bottom: 10px;}
+            .mss-help-content h5 { color: var(--SmartThemeQuoteColor, #8cdeff); font-size: 1.1em; margin-top: 25px; margin-bottom: 15px; }
+            .mss-help-content h6 { font-size: 1.05em; margin-top: 20px; margin-bottom: 10px; font-weight: bold; }
+            .mss-help-content ul { list-style-type: disc; padding-left: 25px; }
+            .mss-help-content li { margin-bottom: 15px; }
+            .mss-help-content strong { color: #ffffff; }
+            .mss-help-content code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+            .mss-help-content blockquote { border-left: 3px solid var(--SmartThemeQuoteColor, #4a9eff); margin-left: 0; padding-left: 15px; color: #ccc; font-style: italic; }
+            .mss-help-content .description { margin-top: 5px; color: #ddd; padding-left: 10px; }
+            .mss-help-content hr { border: none; border-top: 1px solid var(--SmartThemeBorderColor, #444); margin: 30px 0; }
             .mss-help-footer { padding: 15px 20px; border-top: 1px solid var(--SmartThemeBorderColor, #444); text-align: center; }
             .mss-help-close-btn { background: var(--SmartThemeQuoteColor, #4a9eff); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
             #${PANEL_ID} .settings_section { margin-bottom: 20px; }
@@ -345,8 +353,8 @@ const initSettingsUI = () => {
 			return `<h5>更新日志 (v${version})</h5><p>加载更新日志时发生网络错误，请检查网络连接或稍后重试。</p>`;
 		}
 	}
-	
-    const createAndInjectUI = () => {
+
+	const createAndInjectUI = () => {
         if ($(`#${BUTTON_ID}`).length === 0 && $(`#extensionsMenu`).length > 0) {
             const settingsButton = $('<div/>', {
                 id: BUTTON_ID, class: 'list-group-item flex-container flexGap5 interactable',
@@ -357,27 +365,66 @@ const initSettingsUI = () => {
 
         if ($(`#${OVERLAY_ID}`).length === 0) {
             const helpContentHtml = `
-                <h5><i class="fa-solid fa-sliders"></i> 设置项详解</h5>
+                <h4>酒馆截图插件 v2.0.7 使用说明</h4>
+                
+                <h5>✨ 主要更新内容</h5>
+                <h6>核心优化与修复</h6>
                 <ul>
-                    <li><b>截图缩放比例:</b> 调整截图的清晰度。值越高，图片越大越清晰，但文件也越大。推荐值为 1.5 ~ 2.0。</li>
-                    <li><b>图片格式:</b> WebP 格式在同等画质下文件体积最小，兼容性好，是首选。PNG 提供无损质量和透明背景，但文件最大。JPEG 适用于长截图，但画质有损。</li>
-                    <li><b>图片质量:</b> 仅对 WebP 和 JPEG 有效。值越接近 1，画质越高，文件越大。</li>
-                    <li><b>不截取背景图片:</b> 勾选后，截图的背景将是透明的（PNG/WebP格式）或纯色（JPEG格式），而不是聊天窗口的背景图。</li>
-                    <li><b>自定义图标:</b> 允许你用自己的图片替换默认的截图按钮图标。可以从图床（如 catbox.moe）获取图片链接。</li>
+                    <li><strong>背景与美化修复</strong>：优化了对聊天背景图片、小剧场等美化元素的兼容性，截图效果更佳。</li>
+                    <li><strong>性能与稳定性</strong>：提升了截图速度和稳定性，整体体验更流畅。</li>
+                    <li><strong>快捷多选截图</strong>：<strong>长按</strong> 每条消息的相机图标，现在可以直接唤出菜单，快速截取上下文中的多条消息！</li>
                 </ul>
-                <h5><i class="fa-solid fa-lightbulb"></i> 功能与技巧</h5>
+
+                <h5>新增功能详解</h5>
+                <h6>1. "截图设置" 面板</h6>
+                <div class="description">现在您可以在扩展菜单中找到全新的 <strong>“截图设置”</strong> 面板，自由定制各项截图参数。</div>
                 <ul>
-                    <li><b>单击截图:</b> 点击消息右侧的 <i class="fa-solid fa-camera"></i> 图标，可快速截取单条消息。</li>
-                    <li><b>长按多选:</b> 长按 <i class="fa-solid fa-camera"></i> 图标，会弹出一个菜单，让你快速截取该消息前后的多条消息，非常适合截取上下文。</li>
-                    <li><b>长截图模式:</b> 在聊天输入框上方的菜单栏，有一个 <i class="fa-solid fa-scroll"></i> "Long Screenshot" 按钮，点击后可以手动勾选任意多条消息进行拼接截图。</li>
-                    <li><b>自动缓存:</b> 插件会自动缓存字体和图片资源，后续截图速度会越来越快。如果更换了字体或背景，缓存会自动更新。</li>
+                    <li>
+                        <strong>截图缩放比例 (Scale)</strong>
+                        <div class="description"><strong>作用</strong>：调整截图的清晰度。值越高，图片越大越清晰，但文件体积也越大，生成速度会变慢。</div>
+                        <div class="description"><strong>推荐值</strong>：设置为 <code>1.5</code> ~ <code>2.0</code> 之间即可获得高清画质，是性能和质量的最佳平衡点。</div>
+                    </li>
+                    <li>
+                        <strong>图片格式 (Format)</strong>
+                        <ul>
+                            <li><strong>WebP</strong>：推荐。在同等画质下文件体积最小（比 JPEG 小30%-50%），兼容性好。生成速度比 JPEG 稍慢（约1秒）。</li>
+                            <li><strong>JPEG</strong>：速度最快，兼容性好，适合生成超长截图。</li>
+                            <li><strong>PNG</strong>：无损画质，但文件体积巨大，清晰度与另外两个格式相比肉眼看不出区别，性价比极低。</li>
+                        </ul>
+                        <blockquote><strong>特别说明</strong>：当截图过长，超过 WebP 格式的高度限制时，插件会自动将本次截图回退到 JPEG 格式以确保成功生成。</blockquote>
+                    </li>
+                    <li>
+                        <strong>图片质量 (Quality)</strong>
+                        <div class="description"><strong>作用</strong>：仅对 <code>WebP</code> 和 <code>JPEG</code> 格式有效。数值越高，画质越好，但对文件大小和速度的影响远小于“缩放比例”。</div>
+                        <div class="description"><strong>用途</strong>：可作为微调参数，通常保持默认值 <code>0.92</code> 即可。</div>
+                    </li>
+                    <li>
+                        <strong>不截取背景图片 (No Background)</strong>
+                        <div class="description"><strong>作用</strong>：开启后，截图背景将变为透明（PNG/WebP）或纯色（JPEG），而不是聊天窗口的背景图。</div>
+                        <div class="description"><strong>推荐场景</strong>：当您使用的主题没有背景图，或者背景图被消息气泡完全遮挡时（例如某些纯色主题），开启此项可以显著提升截图速度并减小文件体积。</div>
+                    </li>
+                    <li>
+                        <strong>自定义图标 (Custom Icon)</strong>
+                        <div class="description"><strong>作用</strong>：允许您用自己喜欢的图片替换默认的相机图标。</div>
+                        <div class="description"><strong>使用方法</strong>：点击输入框右侧的 <i class="fa-solid fa-arrow-up-from-bracket"></i> 箭头会跳转到 <code>catbox.moe</code> 图床。上传您的图标后，将生成的图片直链粘贴到输入框中并勾选“启用”即可。</div>
+                    </li>
                 </ul>
+
+                <h5>其他改进与说明</h5>
+                <ul>
+                    <li><strong>内置使用说明</strong>：想要随时回顾这些功能介绍？直接点击设置面板左上角的“<strong>使用说明</strong>”标题即可查看详细指南。</li>
+                    <li><strong>自动更新提醒</strong>：插件现在会自动检查更新。当有新版本时，扩展菜单中的“截图设置”右侧会出现红色的“**(可更新)**”提示，点击它即可一键更新！</li>
+                    <li><strong>更新过程</strong>：点击更新后，请耐心等待后端处理。如果更新失败，可以尝试在扩展列表中删除本插件后重新安装。</li>
+                    <li><strong>问题反馈</strong>：有任何问题或建议，欢迎在旅程搜索“<strong>酒馆消息精准截图</strong>”关键词，进入帖子进行反馈！</li>
+                </ul>
+                <hr>
+                <p style="text-align:right; font-style:italic;">发布于 2025年7月30日</p>
             `;
             const uiHtml = `
                 <div id="${OVERLAY_ID}">
                     <div id="${PANEL_ID}">
                         <div class="mss-panel-header">
-                            <h4 id="mss-show-help-btn" title="点击查看使用说明">使用说明</h4>
+                            <h4 id="mss-show-help-btn" title="点击查看使用说明">使用说明（点击该标题查看使用说明）</h4>
                             <button class="mss-panel-close-btn" title="Close">×</button>
                         </div>
                         <div class="mss-panel-content">
