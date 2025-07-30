@@ -283,7 +283,7 @@ const initSettingsUI = () => {
     };
     
     async function getUpdateNoticeHtml(version) {
-        const changelogUrl = `/extensions/${PLUGIN_ID}/CHANGELOG.md`;
+        const changelogUrl = `/scripts/extensions/third-party/${PLUGIN_ID}/CHANGELOG.md`;
         try {
             captureLogger.info(`Fetching local changelog from: ${changelogUrl}`);
             const response = await fetch(changelogUrl, { cache: 'no-store' });
